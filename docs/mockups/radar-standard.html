@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ship screen — standard (reference mockup)</title>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#05080C}
+a{color:#4FD1E0}a:hover{color:#8BE6F0}
+</style>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #070B10; color: #CFE3EA; font-family: 'IBM Plex Mono', monospace; font-size: 13px; display: grid; grid-template-rows: 52px minmax(0, 1fr) 168px">
+
+<header style="display: flex; align-items: center; gap: 28px; padding: 0 20px; border-bottom: 1px solid #1C2A36; background: #0A1017">
+<div style="font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 18px; letter-spacing: 0.08em; color: #4FD1E0">MSV KESTREL ARC</div>
+<div style="color: #8FA7B4">Venture-class mining frigate</div>
+<div style="flex-grow: 1"></div>
+<div style="display: flex; align-items: center; gap: 10px"><span style="color: #8FA7B4">SYSTEM</span><span style="font-weight: 600">Halden</span><span style="padding: 2px 8px; border: 1px solid #6EA8FF; color: #9CC4FF">0.8 HIGH SEC</span></div>
+<div style="display: flex; gap: 10px"><span style="color: #8FA7B4">WALLET</span><span style="font-weight: 600">48,210 cr</span></div>
+<div style="display: flex; gap: 10px"><span style="color: #8FA7B4">AUTOMATION</span><span style="color: #F2A33A">1 program running</span></div>
+<div style="color: #8FA7B4">UTC 15:31:07</div>
+</header>
+
+<div style="display: grid; grid-template-columns: 210px minmax(0, 1fr) 400px; min-height: 0">
+
+<nav aria-label="Main menu" style="border-right: 1px solid #1C2A36; padding: 14px 10px; display: flex; flex-direction: column; gap: 4px; background: #0A1017">
+<button style="display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 12px; background: #11202B; border: 0; border-left: 3px solid #4FD1E0; color: #E6F4F8; font: 500 13px 'IBM Plex Mono', monospace; text-align: left">Radar<span style="color: #8FA7B4">F1</span></button>
+<button style="display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 12px; background: transparent; border: 0; border-left: 3px solid transparent; color: #B4CAD4; font: 500 13px 'IBM Plex Mono', monospace; text-align: left">Navigation<span style="color: #6F8794">F2</span></button>
+<button style="display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 12px; background: transparent; border: 0; border-left: 3px solid transparent; color: #B4CAD4; font: 500 13px 'IBM Plex Mono', monospace; text-align: left">Ship &amp; Fitting<span style="color: #6F8794">F3</span></button>
+<button style="display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 12px; background: transparent; border: 0; border-left: 3px solid transparent; color: #B4CAD4; font: 500 13px 'IBM Plex Mono', monospace; text-align: left">Cargo<span style="color: #6F8794">F4</span></button>
+<button style="display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 12px; background: transparent; border: 0; border-left: 3px solid transparent; color: #B4CAD4; font: 500 13px 'IBM Plex Mono', monospace; text-align: left">Market<span style="color: #6F8794">F5</span></button>
+<button style="display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 12px; background: transparent; border: 0; border-left: 3px solid transparent; color: #B4CAD4; font: 500 13px 'IBM Plex Mono', monospace; text-align: left">Industry<span style="color: #6F8794">F6</span></button>
+<button style="display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 12px; background: transparent; border: 0; border-left: 3px solid transparent; color: #B4CAD4; font: 500 13px 'IBM Plex Mono', monospace; text-align: left">Comms<span style="color: #F2A33A">3</span></button>
+<button style="display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 12px; background: transparent; border: 0; border-left: 3px solid transparent; color: #B4CAD4; font: 500 13px 'IBM Plex Mono', monospace; text-align: left">Automation<span style="color: #6F8794">F8</span></button>
+<button style="display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 12px; background: transparent; border: 0; border-left: 3px solid transparent; color: #B4CAD4; font: 500 13px 'IBM Plex Mono', monospace; text-align: left">Corporation<span style="color: #6F8794">F9</span></button>
+<div style="flex-grow: 1"></div>
+<div style="border-top: 1px solid #1C2A36; padding: 12px 4px 0; display: flex; flex-direction: column; gap: 6px">
+<div style="color: #8FA7B4; font-size: 11px; letter-spacing: 0.1em">PROGRAM</div>
+<div style="color: #F2A33A">ore-run.v2</div>
+<div style="color: #8FA7B4; font-size: 12px">Belt 3-A · cycle 14 · 60% yield cap</div>
+</div>
+</nav>
+
+<main style="position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; background: #060A0E">
+<div style="position: absolute; top: 14px; left: 18px; display: flex; flex-direction: column; gap: 4px">
+<div style="font-family: 'Chakra Petch', sans-serif; font-weight: 600; letter-spacing: 0.12em; color: #4FD1E0">TACTICAL · 100 KM</div>
+<div style="color: #8FA7B4; font-size: 12px">Heading 042 · 85 m/s · passive sensors</div>
+</div>
+<div style="position: absolute; top: 14px; right: 18px; display: flex; gap: 6px">
+<button style="height: 32px; padding: 0 10px; background: #11202B; border: 1px solid #2A3E4C; color: #CFE3EA; font: 500 12px 'IBM Plex Mono', monospace">25 km</button>
+<button style="height: 32px; padding: 0 10px; background: #11202B; border: 1px solid #4FD1E0; color: #E6F4F8; font: 500 12px 'IBM Plex Mono', monospace">100 km</button>
+<button style="height: 32px; padding: 0 10px; background: #11202B; border: 1px solid #2A3E4C; color: #CFE3EA; font: 500 12px 'IBM Plex Mono', monospace">System</button>
+</div>
+
+<svg width="620" height="620" viewBox="-320 -320 640 640" role="img" aria-label="Radar showing station, jump gate, asteroid belt, NPC miner, police patrol and an unidentified contact">
+<circle cx="0" cy="0" r="300" fill="none" stroke="#4FD1E0" stroke-opacity="0.55" stroke-width="1.5"></circle>
+<circle cx="0" cy="0" r="225" fill="none" stroke="#4FD1E0" stroke-opacity="0.22"></circle>
+<circle cx="0" cy="0" r="150" fill="none" stroke="#4FD1E0" stroke-opacity="0.22"></circle>
+<circle cx="0" cy="0" r="75" fill="none" stroke="#4FD1E0" stroke-opacity="0.22"></circle>
+<line x1="-300" y1="0" x2="300" y2="0" stroke="#4FD1E0" stroke-opacity="0.15"></line>
+<line x1="0" y1="-300" x2="0" y2="300" stroke="#4FD1E0" stroke-opacity="0.15"></line>
+<path d="M0 0 L212 -212 A300 300 0 0 1 300 0 Z" fill="#4FD1E0" fill-opacity="0.06"></path>
+<line x1="0" y1="0" x2="212" y2="-212" stroke="#4FD1E0" stroke-opacity="0.7" stroke-width="1.5"></line>
+<text x="6" y="-78" fill="#6F8794" font-size="10" font-family="IBM Plex Mono">25</text>
+<text x="6" y="-153" fill="#6F8794" font-size="10" font-family="IBM Plex Mono">50</text>
+<text x="6" y="-228" fill="#6F8794" font-size="10" font-family="IBM Plex Mono">75</text>
+<text x="-8" y="-306" fill="#8FA7B4" font-size="11" font-family="IBM Plex Mono">N</text>
+
+<rect x="-196" y="-136" width="20" height="20" fill="none" stroke="#4FD1E0" stroke-width="1.5"></rect>
+<rect x="-191" y="-131" width="10" height="10" fill="#4FD1E0" fill-opacity="0.5"></rect>
+<text x="-168" y="-122" fill="#CFE3EA" font-size="11" font-family="IBM Plex Mono">Halden IV Station</text>
+
+<path d="M220 -214 L232 -200 L220 -186 L208 -200 Z" fill="none" stroke="#CFE3EA" stroke-width="1.5"></path>
+<text x="196" y="-222" fill="#CFE3EA" font-size="11" font-family="IBM Plex Mono">Gate → Orsk</text>
+
+<circle cx="82" cy="104" r="3" fill="#8FA7B4"></circle>
+<circle cx="96" cy="118" r="4" fill="#8FA7B4"></circle>
+<circle cx="70" cy="124" r="2.5" fill="#8FA7B4"></circle>
+<circle cx="108" cy="98" r="2.5" fill="#8FA7B4"></circle>
+<circle cx="88" cy="136" r="3" fill="#8FA7B4"></circle>
+<text x="118" y="132" fill="#8FA7B4" font-size="11" font-family="IBM Plex Mono">Belt 3-A</text>
+
+<circle cx="52" cy="168" r="10" fill="none" stroke="#F2A33A" stroke-width="1.5"></circle>
+<circle cx="52" cy="168" r="18" fill="none" stroke="#F2A33A" stroke-opacity="0.45"></circle>
+<circle cx="52" cy="168" r="3" fill="#F2A33A"></circle>
+<text x="-60" y="198" fill="#F2A33A" font-size="11" font-family="IBM Plex Mono">Rich vein · 0:42</text>
+
+<path d="M128 74 L136 88 L120 88 Z" fill="#4FD1E0"></path>
+<text x="142" y="86" fill="#B4CAD4" font-size="11" font-family="IBM Plex Mono">NPC Miner</text>
+
+<path d="M-62 -214 L-52 -198 L-72 -198 Z" fill="none" stroke="#6EA8FF" stroke-width="1.5"></path>
+<text x="-44" y="-200" fill="#9CC4FF" font-size="11" font-family="IBM Plex Mono">Halden Police</text>
+
+<circle cx="236" cy="168" r="16" fill="none" stroke="#F2A33A" stroke-dasharray="3 4" stroke-width="1.5"></circle>
+<circle cx="236" cy="168" r="28" fill="none" stroke="#F2A33A" stroke-opacity="0.35" stroke-dasharray="2 6"></circle>
+<text x="231" y="173" fill="#F2A33A" font-size="13" font-family="IBM Plex Mono">?</text>
+<text x="196" y="214" fill="#F2A33A" font-size="11" font-family="IBM Plex Mono">Unknown · 31%</text>
+
+<path d="M0 -12 L8 8 L0 3 L-8 8 Z" fill="#E6F4F8" transform="rotate(42)"></path>
+</svg>
+</main>
+
+<aside style="border-left: 1px solid #1C2A36; display: flex; flex-direction: column; min-height: 0; background: #0A1017">
+<section style="padding: 14px 16px; border-bottom: 1px solid #1C2A36">
+<div style="font-family: 'Chakra Petch', sans-serif; font-weight: 600; letter-spacing: 0.12em; color: #4FD1E0; margin-bottom: 10px">OVERVIEW</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 72px 70px; row-gap: 2px; font-size: 12px">
+<div style="color: #8FA7B4; padding: 4px 6px">CONTACT</div><div style="color: #8FA7B4; padding: 4px 6px">TYPE</div><div style="color: #8FA7B4; padding: 4px 6px; text-align: right">DIST</div>
+<div style="padding: 6px; background: #1E1A12; color: #F2A33A">Unknown signal</div><div style="padding: 6px; background: #1E1A12; color: #F2A33A">???</div><div style="padding: 6px; background: #1E1A12; color: #F2A33A; text-align: right">78 km</div>
+<div style="padding: 6px">Rich vein</div><div style="padding: 6px; color: #8FA7B4">Anomaly</div><div style="padding: 6px; text-align: right">54 km</div>
+<div style="padding: 6px">Belt 3-A</div><div style="padding: 6px; color: #8FA7B4">Asteroids</div><div style="padding: 6px; text-align: right">43 km</div>
+<div style="padding: 6px">Dren Mining Co.</div><div style="padding: 6px; color: #8FA7B4">NPC</div><div style="padding: 6px; text-align: right">49 km</div>
+<div style="padding: 6px; color: #9CC4FF">Halden Police</div><div style="padding: 6px; color: #8FA7B4">NPC</div><div style="padding: 6px; text-align: right">72 km</div>
+<div style="padding: 6px">Halden IV Station</div><div style="padding: 6px; color: #8FA7B4">Station</div><div style="padding: 6px; text-align: right">74 km</div>
+<div style="padding: 6px">Gate → Orsk</div><div style="padding: 6px; color: #8FA7B4">Gate</div><div style="padding: 6px; text-align: right">98 km</div>
+</div>
+</section>
+
+<section style="padding: 14px 16px; border-bottom: 1px solid #1C2A36; display: flex; flex-direction: column; gap: 10px">
+<div style="font-family: 'Chakra Petch', sans-serif; font-weight: 600; letter-spacing: 0.12em; color: #F2A33A">TARGET · UNIDENTIFIED</div>
+<div style="display: flex; justify-content: space-between; color: #8FA7B4; font-size: 12px"><span>Signature 42 m</span><span>Bearing 128°</span><span>Closing 12 m/s</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between; font-size: 12px"><span>Scan resolution</span><span style="color: #F2A33A">31%</span></div>
+<div style="height: 6px; background: #1C2A36"><div style="width: 31%; height: 6px; background: #F2A33A"></div></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px">
+<button style="height: 44px; background: #2A2213; border: 1px solid #F2A33A; color: #FFD49A; font: 600 12px 'IBM Plex Mono', monospace">Active scan</button>
+<button style="height: 44px; background: #11202B; border: 1px solid #2A3E4C; color: #CFE3EA; font: 500 12px 'IBM Plex Mono', monospace">Approach</button>
+<button style="height: 44px; background: #11202B; border: 1px solid #2A3E4C; color: #CFE3EA; font: 500 12px 'IBM Plex Mono', monospace">Lock target</button>
+<button style="height: 44px; background: #11202B; border: 1px solid #2A3E4C; color: #CFE3EA; font: 500 12px 'IBM Plex Mono', monospace">Warp away</button>
+</div>
+</section>
+
+<section style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-family: 'Chakra Petch', sans-serif; font-weight: 600; letter-spacing: 0.12em; color: #4FD1E0">SHIP</div>
+<div style="display: grid; grid-template-columns: 72px minmax(0, 1fr) 44px; align-items: center; gap: 8px; font-size: 12px">
+<span style="color: #8FA7B4">Shield</span><div style="height: 6px; background: #1C2A36"><div style="width: 100%; height: 6px; background: #6EA8FF"></div></div><span style="text-align: right">100%</span>
+<span style="color: #8FA7B4">Armor</span><div style="height: 6px; background: #1C2A36"><div style="width: 92%; height: 6px; background: #B4CAD4"></div></div><span style="text-align: right">92%</span>
+<span style="color: #8FA7B4">Capacitor</span><div style="height: 6px; background: #1C2A36"><div style="width: 68%; height: 6px; background: #4FD1E0"></div></div><span style="text-align: right">68%</span>
+<span style="color: #8FA7B4">Cargo</span><div style="height: 6px; background: #1C2A36"><div style="width: 41%; height: 6px; background: #CFE3EA"></div></div><span style="text-align: right">41%</span>
+</div>
+</section>
+</aside>
+</div>
+
+<footer style="border-top: 1px solid #1C2A36; display: grid; grid-template-columns: minmax(0, 1fr) 400px; background: #0A1017">
+<div style="padding: 12px 20px; display: flex; flex-direction: column; gap: 5px; font-size: 12px; min-width: 0">
+<div style="display: flex; gap: 14px; padding: 6px 10px; background: #1E1A12; border: 1px solid #5A4220; align-items: center">
+<span style="color: #F2A33A; font-weight: 600">EVENT</span>
+<span style="color: #FFD49A">Rich vein surfaced near Belt 3-A · 3.2× yield · decays in 0:42</span>
+<span style="flex-grow: 1"></span>
+<a href="#">Plot course</a>
+</div>
+<div><span style="color: #6F8794">15:31:02</span>  <span style="color: #F2A33A">Passive sensors:</span> unidentified contact entering 100 km, bearing 128°</div>
+<div><span style="color: #6F8794">15:30:47</span>  ore-run.v2: cycle 14 complete · +86 m³ Veldspar (capped yield)</div>
+<div><span style="color: #6F8794">15:30:12</span>  <span style="color: #9CC4FF">Halden Police</span> patrol arrived on grid</div>
+<div><span style="color: #6F8794">15:29:58</span>  Market: Veldspar buy order filled at Halden IV · 412 cr</div>
+</div>
+<div style="border-left: 1px solid #1C2A36; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px">
+<label for="cmd3" style="color: #8FA7B4; font-size: 11px; letter-spacing: 0.1em">COMMAND</label>
+<div style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; background: #060A0E; border: 1px solid #2A3E4C">
+<span style="color: #4FD1E0">&gt;</span>
+<input id="cmd3" type="text" value="scan contact 1" style="flex-grow: 1; background: transparent; border: 0; color: #E6F4F8; font: 13px 'IBM Plex Mono', monospace; outline: none">
+</div>
+<div style="color: #6F8794; font-size: 11px">Tab completes · ↑ history · same commands as the automation API</div>
+</div>
+</footer>
+</div>
+</body>
+</html>

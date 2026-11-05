@@ -1,0 +1,24 @@
+# Rust
+target/
+
+# .NET (Godot C# and Avalonia)
+bin/
+obj/
+*.user
+
+# Godot
+.godot/
+.mono/
+
+# Local secrets and config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
