@@ -11,6 +11,7 @@ obj/
 .mono/
 
 # Local secrets and config
+dev-certs/
 .env
 .env.*
 !.env.example

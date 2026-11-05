@@ -13,13 +13,13 @@ The slice proves one complete earning loop: a new player learns it alone in a pr
 - Undocking, warping between sites, docking
 - Mining, including one rich vein event that rewards paying attention
 - Selling ore to NPC buy orders with limited volume
-- One upgrade to buy with the earnings (Mining Laser II)
 - The tutorial exit gate: one one-way jump into Kesh
 
 **Out of the slice** (designed later, but the slice must not block them)
 
 - Combat, losses and insurance
-- Fitting beyond the one upgrade, and a second ship type
+- Skills and training. The slice lays the groundwork (see Skills), but nothing trains yet.
+- Fitting and module upgrades, and a second ship type
 - Player-placed market orders
 - Gate travel beyond the tutorial exit
 - Multiple factions. There is one faction for now, but characters already store faction and home system.
@@ -67,11 +67,11 @@ The tutorial runs the first pass alone in the player's private pocket and ends a
 7. **Sell** (`sell ferrite all`). The market shows NPC buy orders; selling fills them and pays out instantly.
 8. **Graduate** (`jump exit`, tutorial only). The player undocks and takes the one-way exit gate. They arrive in space on the Kesh Station grid, a few kilometres from the station, and the pocket is deleted behind them.
 
-In Kesh, the first goal is the Mining Laser II upgrade, which takes about two runs to afford.
+Mining Laser II is a long-term goal, about a month away for a dedicated miner (see Skills). What a new player works toward first in Kesh is still an open question.
 
 ## Starting numbers
 
-One full loop takes about 12 minutes and earns 4,500 cr. The Sparrow pays for itself in under two runs, and the laser upgrade takes two more. These are tuning starting points, not balance decisions.
+One full loop takes about 12 minutes and earns 4,500 cr. The Sparrow pays for itself in under two runs. These are tuning starting points, not balance decisions.
 
 | Value | Start at | Reason |
 | --- | --- | --- |
@@ -79,7 +79,7 @@ One full loop takes about 12 minutes and earns 4,500 cr. The Sparrow pays for it
 | Sparrow price | 6,000 cr | Most of the grant, so the purchase feels real |
 | Sparrow ore hold | 500 m³ | Fills in about 10 minutes |
 | Mining laser yield | 25 m³ per 30 s cycle | 20 cycles per hold; frequent feedback |
-| Mining Laser II | 9,000 cr, 35 m³ per cycle | The first goal after the tutorial |
+| Mining Laser II | 1,000,000 cr, 35 m³ per cycle; needs Mining V and Laser Tuning V | A long-term goal, about a month for a dedicated miner |
 | Mining laser range | 10 km | Forces an approach step after warp |
 | Rich vein | 3× yield, fades after 45 s | Rewards a player who is watching |
 | Undock timer | 10 s | Long enough to read, short enough not to annoy |
@@ -91,7 +91,23 @@ One full loop takes about 12 minutes and earns 4,500 cr. The Sparrow pays for it
 | Asteroid size | 2,000 to 8,000 m³ | Two to sixteen holds per rock |
 | Asteroid regrowth | Slow, over hours | Shared rocks run out when many players mine |
 
-Ore is our own: **Ferrite** is the common ore found everywhere in the cluster. **Siltane**, a richer ore, appears only in Tarrow, the 0.8 border system, so leaving home has a reason. The radar mockup still says Veldspar, EVE's ore name, and needs updating.
+Ore is our own: **Ferrite** is the common ore found everywhere in the cluster. **Siltane**, a richer ore, appears only in Tarrow, the 0.8 border system, so leaving home has a reason.
+
+## Skills
+
+Pacing takes its lead from EVE Online: big upgrades come from skills that train in real time, not only from credits. Skills are out of the slice, but the slice lays the groundwork so they slot in later.
+
+- **Training runs in real time**, offline included, one skill after another from a queue. Nothing trains in the slice.
+- **Five levels per skill**, each costing about 5.7× the one before: 250, 1,414, 8,000, 45,255 and 256,000 points at rank 1. A skill's rank multiplies all of them, so harder skills take longer.
+- **Basic skills are free** to train. **Advanced skills need a book**, bought with credits, before training can start.
+- **Modules require skill levels.** Mining Laser II needs Mining V and Laser Tuning V: about 32 days of training at 2,000 points an hour, plus 1,000,000 cr. A dedicated miner gets there in about a month.
+
+| Skill | Rank | Book | Requires | 0 to V |
+| --- | --- | --- | --- | --- |
+| Mining | 1 | Free (basic) | | About 6.5 days |
+| Laser Tuning | 4 | 200,000 cr | Mining IV | About 26 days |
+
+Training speed, the curve, ranks, book prices and requirements are all config. The slice stores skill levels on the character and refuses modules whose requirements aren't met. Training itself needs persistence first, since it must survive restarts.
 
 ## Server model
 
@@ -119,7 +135,7 @@ Every command checks the ship's state first, so `mine` from Warping or `dock` at
 | Grid | Kind (station, belt, gate), position in the system, contents |
 | Asteroid | Grid, position, ore type, volume left |
 | Ship | Owner, type, state, grid, position, hold contents, active timer |
-| Character | Wallet, active ship, docked station, faction, home system, tutorial step |
+| Character | Wallet, active ship, docked station, faction, home system, tutorial step, skill levels |
 | Tutorial instance | Owner, template, script state; deleted when the player exits |
 | NPC buy order | Station, ore type, price per m³, volume left, refill rate |
 
@@ -142,7 +158,12 @@ The slice needs five screens; only the radar exists as a mockup so far.
 - [ ] Is the tutorial a scripted overlay on the real screens, or an NPC contact giving orders over Comms?
 - [ ] Can the player see other players' mining yield, or only that they are mining?
 - [ ] Is the ship named by the player at purchase?
+- [ ] What does a new player work toward first in Kesh, now that Mining Laser II is a month away?
+- [ ] NPC buy orders vs long goals: one miner sells about 2,500 m³ an hour, more than Kesh's order refills. Grinding 1,000,000 cr needs faster refills, more stations, or trips to Halden.
+- [ ] Which skills give a small bonus per level, such as Mining for yield, so new players feel progress in their first hour?
 - [x] NPC prices: fixed in the slice, with limited order volume
+- [x] Mining Laser II: about a month for a dedicated miner, gated by skills
+- [x] Skill books: basic skills are free, advanced skills need a book
 - [x] Logout in space: the ship stays 60 seconds, then warps to safety
 - [x] Graduation: the player arrives in space on the Kesh Station grid
 

@@ -1,0 +1,18 @@
+[package]
+name = "bot"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+protocol.workspace = true
+anyhow.workspace = true
+bytes.workspace = true
+futures-util.workspace = true
+prost.workspace = true
+tokio.workspace = true
+tokio-rustls.workspace = true
+tokio-util.workspace = true
+
+[dev-dependencies]
+server.workspace = true

@@ -1,0 +1,77 @@
+# Tuning numbers. Values from the "Starting numbers" table in docs/design.md,
+# except those marked ASSUMED, which the design doc does not specify yet.
+
+tick_ms = 1000
+starting_credits = 10000
+# A ship left in space by a logged-out player leaves its grid after this long.
+logout_grace_s = 60
+
+[timers]
+undock_s = 10
+align_s = 5
+dock_s = 5                  # ASSUMED: the diagram has a docking timer, the table has no value
+warp_min_s = 15
+warp_max_s = 40
+warp_max_distance = 40.0    # ASSUMED: grid separation that takes warp_max_s
+
+[ranges]
+docking_km = 2.5
+gate_km = 2.5               # ASSUMED: same as docking
+approach_stop_km = 1.0      # ASSUMED: how close approach gets before stopping
+
+[ships.sparrow]
+name = "Sparrow"
+price = 6000
+hold_m3 = 500
+speed_km_s = 0.5            # ASSUMED: about 10 s of approach after landing at a belt
+laser = "mining-laser-1"
+
+[lasers.mining-laser-1]
+name = "Mining Laser I"
+price = 0                   # Comes fitted to the Sparrow, so it is not for sale
+yield_m3 = 25
+cycle_s = 30
+range_km = 10.0
+
+# A long-term goal: about a month of training for a dedicated miner, and a
+# price that takes that month of mining to earn. Not reachable in the slice.
+[lasers.mining-laser-2]
+name = "Mining Laser II"
+price = 1000000             # ASSUMED: about 220 full holds, or 44 hours of mining
+yield_m3 = 35
+cycle_s = 30
+range_km = 10.0
+requires = { mining = 5, laser-tuning = 5 }
+
+# Groundwork only: characters store levels and modules check them, but nothing
+# trains yet. Training will run on real time, offline included.
+[training]
+points_per_hour = 2000.0    # ASSUMED
+base_points = 250.0
+level_multiplier = 5.656854 # sqrt(32): level I to V is 250, 1414, 8000, 45255, 256000 points
+
+[skills.mining]
+name = "Mining"
+rank = 1                    # 0 to V in about 6.5 days
+book_price = 0              # Basic skill, no book needed
+
+[skills.laser-tuning]
+name = "Laser Tuning"
+rank = 4                    # 0 to V in about 26 days
+book_price = 200000         # ASSUMED: advanced skill, sold as a book
+requires = { mining = 4 }
+
+[rich_vein]
+yield_multiplier = 3
+lifetime_s = 45
+trigger_hold_m3 = 100       # ASSUMED: the cue, once this much ore is in the hold
+spawn_distance_km = 6.0     # ASSUMED: inside laser range, so no approach is needed
+volume_m3 = 500             # ASSUMED
+
+[asteroid]
+regrowth_m3_per_hour = 200.0   # ASSUMED: the design says "slow, over hours"
+
+[market]
+ferrite_price = 9
+order_volume_m3 = 5000
+order_refill_m3_per_hour = 1250.0   # ASSUMED: empty to full in 4 hours

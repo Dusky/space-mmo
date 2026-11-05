@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = ["protocol", "server", "bot"]
+
+[workspace.package]
+edition = "2021"
+publish = false
+
+[workspace.dependencies]
+protocol = { path = "protocol" }
+server = { path = "server" }
+anyhow = "1"
+bytes = "1"
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+prost = "0.14"
+prost-build = "0.14"
+protox = "0.9"
+rcgen = { version = "0.14", default-features = false, features = ["crypto", "pem", "ring"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12", "logging"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+toml = "0.9"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

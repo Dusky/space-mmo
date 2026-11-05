@@ -1,0 +1,97 @@
+# Slice content: the tutorial template and Kesh. Vael, Halden, Orsk and Tarrow
+# are added when gate travel leaves the "out of the slice" list.
+#
+# Positions are kilometres within a grid. A grid's `system_pos` is its location
+# in the system, used for warp time. `arrival` is where warp lands: belts land
+# outside laser range of the nearest rock, so the player must approach first.
+
+home_system = "kesh"
+tutorial_system = "tutorial"
+# Where the exit gate lands on the home station grid: in space, 5 km from the station.
+graduation_arrival = [4.0, 3.0]
+
+[[systems]]
+id = "tutorial"
+name = "Training Pocket"
+security = 1.0
+
+  [systems.station]
+  id = "station"
+  name = "Training Station"
+  services = ["shipyard", "market", "hangar", "undock"]
+  undock_pos = [0.5, 0.0]
+
+  [[systems.grids]]
+  id = "station"
+  name = "Training Station"
+  kind = "station"
+  system_pos = [0.0, 0.0]
+  arrival = [2.0, 0.0]
+
+  [[systems.grids]]
+  id = "belt-1"
+  name = "Training Belt"
+  kind = "belt"
+  system_pos = [10.0, 0.0]
+  arrival = [0.0, 0.0]
+  rocks = [
+    { ore = "ferrite", volume_m3 = 8000, pos = [14.0, 0.0] },
+    { ore = "ferrite", volume_m3 = 8000, pos = [16.0, 4.0] },
+    { ore = "ferrite", volume_m3 = 8000, pos = [17.0, -4.0] },
+  ]
+
+  [[systems.grids]]
+  id = "exit-gate"
+  name = "Exit Gate"
+  kind = "gate"
+  system_pos = [5.0, 8.0]
+  arrival = [2.0, 0.0]
+
+[[systems]]
+id = "kesh"
+name = "Kesh"
+security = 1.0
+
+  [systems.station]
+  id = "station"
+  name = "Kesh Station"
+  services = ["shipyard", "market", "hangar", "undock"]
+  undock_pos = [0.5, 0.0]
+
+  [[systems.grids]]
+  id = "station"
+  name = "Kesh Station"
+  kind = "station"
+  system_pos = [0.0, 0.0]
+  arrival = [2.0, 0.0]
+
+  [[systems.grids]]
+  id = "belt-1"
+  name = "Kesh Belt 1"
+  kind = "belt"
+  system_pos = [12.0, 5.0]
+  arrival = [0.0, 0.0]
+  rocks = [
+    { ore = "ferrite", volume_m3 = 6000, pos = [14.0, 1.0] },
+    { ore = "ferrite", volume_m3 = 4000, pos = [15.0, 6.0] },
+    { ore = "ferrite", volume_m3 = 8000, pos = [18.0, -3.0] },
+    { ore = "ferrite", volume_m3 = 2000, pos = [20.0, 3.0] },
+  ]
+
+  [[systems.grids]]
+  id = "belt-2"
+  name = "Kesh Belt 2"
+  kind = "belt"
+  system_pos = [30.0, -10.0]
+  arrival = [0.0, 0.0]
+  rocks = [
+    { ore = "ferrite", volume_m3 = 5000, pos = [13.0, -2.0] },
+    { ore = "ferrite", volume_m3 = 7000, pos = [16.0, 3.0] },
+    { ore = "ferrite", volume_m3 = 3000, pos = [19.0, -5.0] },
+  ]
+  # Scenery so the home system never looks empty. They do not deplete rocks yet.
+  npc_miners = [
+    { name = "Hauler Oskin", pos = [11.0, -1.0] },
+    { name = "Prospector Mel", pos = [14.0, 6.0] },
+    { name = "Prospector Dray", pos = [17.0, -9.0] },
+  ]

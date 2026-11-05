@@ -1,0 +1,196 @@
+// Single source of truth for the wire protocol.
+//
+// Each frame on the TLS stream is a 4-byte big-endian length followed by one
+// ClientMessage or ServerMessage. The first client frame must be Login.
+syntax = "proto3";
+
+package space_mmo.v1;
+
+message ClientMessage {
+  oneof body {
+    Login login = 1;
+    Command command = 2;
+  }
+}
+
+message Login {
+  oneof credential {
+    // Local development only. The server refuses it unless dev login is enabled.
+    string dev_account = 1;
+    // Steam session ticket. Not implemented yet, and refused by the server.
+    bytes steam_ticket = 2;
+  }
+}
+
+// Every player action is one verb line, such as "warp belt-1". The client UI,
+// the command line and the future automation API all send this same message.
+message Command {
+  // Chosen by the client and echoed in CommandResult.
+  uint64 id = 1;
+  string line = 2;
+}
+
+message ServerMessage {
+  oneof body {
+    LoginResult login_result = 1;
+    CommandResult command_result = 2;
+    Snapshot snapshot = 3;
+  }
+}
+
+message LoginResult {
+  bool ok = 1;
+  string message = 2;
+}
+
+message CommandResult {
+  uint64 id = 1;
+  bool ok = 2;
+  // REFUSAL_NONE when ok is true.
+  Refusal refusal = 3;
+  // Text the client can show, for a success or a refusal.
+  string message = 4;
+}
+
+// Stable reason codes, so clients and automation need not parse message text.
+enum Refusal {
+  REFUSAL_NONE = 0;
+  REFUSAL_UNKNOWN_COMMAND = 1;
+  REFUSAL_BAD_ARGUMENT = 2;
+  REFUSAL_WRONG_STATE = 3;
+  REFUSAL_NO_SHIP = 4;
+  REFUSAL_OUT_OF_RANGE = 5;
+  REFUSAL_NOT_FOUND = 6;
+  REFUSAL_INSUFFICIENT_CREDITS = 7;
+  REFUSAL_ALREADY_OWNED = 8;
+  REFUSAL_NOTHING_TO_SELL = 9;
+  REFUSAL_NO_DEMAND = 10;
+  REFUSAL_HOLD_FULL = 11;
+  REFUSAL_TUTORIAL_INCOMPLETE = 12;
+  REFUSAL_SERVICE_UNAVAILABLE = 13;
+  REFUSAL_MISSING_SKILL = 14;
+}
+
+enum ShipState {
+  SHIP_STATE_NONE = 0;  // The character owns no ship yet.
+  SHIP_STATE_DOCKED = 1;
+  SHIP_STATE_UNDOCKING = 2;
+  SHIP_STATE_IDLE = 3;
+  SHIP_STATE_ALIGNING = 4;
+  SHIP_STATE_WARPING = 5;
+  SHIP_STATE_APPROACHING = 6;
+  SHIP_STATE_MINING = 7;
+  SHIP_STATE_DOCKING = 8;
+}
+
+// The first pass of the core loop. The server only reports the step. Whether a
+// client shows it as an overlay or as Comms orders is still an open question.
+enum TutorialStep {
+  TUTORIAL_STEP_NONE = 0;  // Graduated.
+  TUTORIAL_STEP_BUY_SHIP = 1;
+  TUTORIAL_STEP_UNDOCK = 2;
+  TUTORIAL_STEP_WARP_TO_BELT = 3;
+  TUTORIAL_STEP_APPROACH = 4;
+  TUTORIAL_STEP_MINE = 5;
+  TUTORIAL_STEP_WARP_TO_STATION = 6;
+  TUTORIAL_STEP_DOCK = 7;
+  TUTORIAL_STEP_SELL = 8;
+  TUTORIAL_STEP_EXIT = 9;
+}
+
+enum ContactKind {
+  CONTACT_KIND_UNSPECIFIED = 0;
+  CONTACT_KIND_STATION = 1;
+  CONTACT_KIND_GATE = 2;
+  CONTACT_KIND_ASTEROID = 3;
+  CONTACT_KIND_RICH_VEIN = 4;
+  CONTACT_KIND_PLAYER_SHIP = 5;
+  CONTACT_KIND_NPC_SHIP = 6;
+}
+
+// Sent once a tick, and to the commanding player straight after each command.
+message Snapshot {
+  uint64 tick = 1;
+  // Milliseconds per tick, so clients can turn tick counts into real time.
+  uint32 tick_ms = 2;
+  string character = 3;
+  uint64 credits = 4;
+  TutorialStep tutorial_step = 5;
+  string system = 6;
+  double security = 7;
+  // Warp destinations in the current system.
+  repeated Site sites = 8;
+  // Unset until the character owns a ship.
+  OwnShip ship = 9;
+  // Set while docked.
+  StationView station = 10;
+  // Only what is on this player's own grid. Empty while docked or in warp.
+  repeated Contact contacts = 11;
+  // Things that happened since the previous snapshot.
+  repeated string events = 12;
+}
+
+message Site {
+  string id = 1;
+  string name = 2;
+}
+
+message OwnShip {
+  string type_id = 1;
+  ShipState state = 2;
+  // Current grid, or empty while docked or in warp.
+  string grid = 3;
+  double x_km = 4;
+  double y_km = 5;
+  // Ticks left on the active timer (undock, align, warp, dock, mining cycle).
+  uint32 timer_ticks = 6;
+  string target = 7;
+  uint32 hold_used_m3 = 8;
+  uint32 hold_capacity_m3 = 9;
+  repeated HoldItem hold = 10;
+  string laser = 11;
+  uint32 laser_yield_m3 = 12;
+  double laser_range_km = 13;
+}
+
+message HoldItem {
+  string ore = 1;
+  uint32 volume_m3 = 2;
+}
+
+message StationView {
+  string id = 1;
+  string name = 2;
+  repeated string services = 3;
+  repeated BuyOrder buy_orders = 4;
+  repeated ShipyardItem shipyard = 5;
+}
+
+message BuyOrder {
+  string ore = 1;
+  uint64 price_per_m3 = 2;
+  uint32 volume_left_m3 = 3;
+}
+
+message ShipyardItem {
+  // The exact command that buys this item, such as "buy ship sparrow".
+  string command = 1;
+  string name = 2;
+  uint64 price = 3;
+  string summary = 4;
+}
+
+message Contact {
+  // The id used by commands, such as "approach rock-3".
+  string id = 1;
+  ContactKind kind = 2;
+  string name = 3;
+  double x_km = 4;
+  double y_km = 5;
+  double distance_km = 6;
+  // Ship activity, such as "mining". Yield is deliberately not exposed.
+  string activity = 7;
+  // Ore type and volume left, for asteroids only.
+  string ore = 8;
+  uint32 volume_left_m3 = 9;
+}
