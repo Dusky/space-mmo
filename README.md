@@ -14,7 +14,9 @@ cargo run -p bot -- --account alice
 
 `--dev` lets anyone who can reach the port log in as any account, so keep it on localhost. Without it, the server needs `--cert` and `--key`, and refuses every login until Steam tickets are implemented.
 
-Game state is in memory for now, and is lost when the server stops.
+The world lives in memory and is saved to Postgres every 5 seconds, and once more on Ctrl-C. The server reads `DATABASE_URL` from the environment or from `.env` (git-ignored), and creates its tables on first start. `--no-db` runs without saving. Storage tests make and drop their own throwaway database, so they never touch real data; they are skipped when no database is configured.
+
+On the dev machine, Postgres runs in Docker from `~/.docker/space-mmo-db`, listening on 127.0.0.1:5433 only.
 
 | Path | What it holds |
 | --- | --- |

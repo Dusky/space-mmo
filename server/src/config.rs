@@ -16,6 +16,8 @@ pub struct GameConfig {
     pub tick_ms: u32,
     pub starting_credits: u64,
     pub logout_grace_s: u32,
+    /// Seconds of game time between saves to Postgres.
+    pub save_every_s: u32,
     pub timers: Timers,
     pub ranges: Ranges,
     pub ships: BTreeMap<String, ShipConfig>,
@@ -213,6 +215,7 @@ pub fn load(dir: &Path) -> Result<(GameConfig, WorldConfig)> {
 
 fn validate(game: &GameConfig, world: &WorldConfig) -> Result<()> {
     ensure!(game.tick_ms > 0, "tick_ms must be above zero");
+    ensure!(game.save_every_s > 0, "save_every_s must be above zero");
     for (id, ship) in &game.ships {
         ensure!(
             game.lasers.contains_key(&ship.laser),

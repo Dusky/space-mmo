@@ -2,6 +2,7 @@
 //! it messages, so game state never needs a lock.
 
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -21,7 +22,8 @@ use tokio_rustls::rustls::ServerConfig;
 use tokio_rustls::TlsAcceptor;
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
-use crate::sim::World;
+use crate::sim::{Saved, World};
+use crate::store::Store;
 
 const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
 const LOGIN_TIMEOUT: Duration = Duration::from_secs(10);
@@ -55,6 +57,9 @@ enum ToWorld {
     Disconnect {
         session: u64,
     },
+    Shutdown {
+        done: oneshot::Sender<Result<()>>,
+    },
 }
 
 struct Session {
@@ -75,16 +80,25 @@ pub fn tls_acceptor(
     Ok(TlsAcceptor::from(Arc::new(config)))
 }
 
+/// Runs until `shutdown` resolves, then saves one last time and returns the
+/// result of that save. Without a store, the world is in memory only.
 pub async fn serve(
     listener: TcpListener,
     tls: TlsAcceptor,
     world: World,
     options: ServeOptions,
+    store: Option<Arc<Store>>,
+    shutdown: impl Future<Output = ()>,
 ) -> Result<()> {
     let (to_world, from_sessions) = mpsc::channel(ACTOR_QUEUE);
-    tokio::spawn(run_world(world, from_sessions));
+    let world_task = tokio::spawn(run_world(world, from_sessions, store));
+    tokio::pin!(shutdown);
     loop {
-        let (tcp, peer) = match listener.accept().await {
+        let accepted = tokio::select! {
+            _ = &mut shutdown => break,
+            accepted = listener.accept() => accepted,
+        };
+        let (tcp, peer) = match accepted {
             Ok(accepted) => accepted,
             Err(err) => {
                 tracing::warn!(%err, "accept failed");
@@ -101,12 +115,54 @@ pub async fn serve(
             }
         });
     }
+    let (done, saved) = oneshot::channel();
+    to_world.send(ToWorld::Shutdown { done }).await?;
+    let result = saved.await.context("the world task stopped early")?;
+    world_task.await?;
+    result
 }
 
-async fn run_world(mut world: World, mut inbox: mpsc::Receiver<ToWorld>) {
+enum SaveJob {
+    /// Dropped if a save is already queued: the next one will be newer anyway.
+    Periodic(Saved),
+    /// Queued behind any periodic save, so it is always the last write.
+    Final(Saved, oneshot::Sender<Result<()>>),
+}
+
+/// Writes saves in order, off the tick loop, so a slow disk never stalls play.
+async fn run_saver(store: Arc<Store>, mut jobs: mpsc::Receiver<SaveJob>) {
+    while let Some(job) = jobs.recv().await {
+        match job {
+            SaveJob::Periodic(saved) => {
+                if let Err(err) = store.save(&saved).await {
+                    tracing::error!(err = format!("{err:#}"), tick = saved.tick, "save failed");
+                }
+            }
+            SaveJob::Final(saved, done) => {
+                let result = store.save(&saved).await;
+                if result.is_ok() {
+                    tracing::info!(tick = saved.tick, "final save written");
+                }
+                let _ = done.send(result);
+                return;
+            }
+        }
+    }
+}
+
+async fn run_world(
+    mut world: World,
+    mut inbox: mpsc::Receiver<ToWorld>,
+    store: Option<Arc<Store>>,
+) {
     let mut sessions: HashMap<u64, Session> = HashMap::new();
     let mut ticker = interval(Duration::from_millis(u64::from(world.tick_ms())));
     ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
+    let saver = store.map(|store| {
+        let (jobs, queue) = mpsc::channel(1);
+        tokio::spawn(run_saver(store, queue));
+        jobs
+    });
     loop {
         tokio::select! {
             _ = ticker.tick() => {
@@ -115,13 +171,40 @@ async fn run_world(mut world: World, mut inbox: mpsc::Receiver<ToWorld>) {
                 for id in ids {
                     send_snapshot(&mut world, &mut sessions, id);
                 }
+                if let Some(saver) = &saver {
+                    if world.current_tick().is_multiple_of(world.save_every_ticks())
+                        && saver.try_send(SaveJob::Periodic(world.export())).is_err()
+                    {
+                        tracing::warn!("previous save still running; skipping this one");
+                    }
+                }
             }
             message = inbox.recv() => {
-                let Some(message) = message else { return };
-                handle(&mut world, &mut sessions, message);
+                match message {
+                    Some(ToWorld::Shutdown { done }) => {
+                        sessions.clear();
+                        let result = match &saver {
+                            Some(saver) => final_save(saver, world.export()).await,
+                            None => Ok(()),
+                        };
+                        let _ = done.send(result);
+                        return;
+                    }
+                    Some(message) => handle(&mut world, &mut sessions, message),
+                    None => return,
+                }
             }
         }
     }
+}
+
+async fn final_save(saver: &mpsc::Sender<SaveJob>, saved: Saved) -> Result<()> {
+    let (done, result) = oneshot::channel();
+    saver
+        .send(SaveJob::Final(saved, done))
+        .await
+        .map_err(|_| anyhow::anyhow!("the saver stopped"))?;
+    result.await.context("the saver stopped")?
 }
 
 fn handle(world: &mut World, sessions: &mut HashMap<u64, Session>, message: ToWorld) {
@@ -175,6 +258,7 @@ fn handle(world: &mut World, sessions: &mut HashMap<u64, Session>, message: ToWo
                 world.logout(&ended.account);
             }
         }
+        ToWorld::Shutdown { .. } => unreachable!("run_world handles shutdown itself"),
     }
 }
 

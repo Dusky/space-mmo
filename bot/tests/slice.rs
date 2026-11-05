@@ -36,6 +36,8 @@ async fn start(dev_login: bool) -> TestServer {
         acceptor,
         world,
         ServeOptions { dev_login },
+        None,
+        std::future::pending(),
     ));
     TestServer { addr, ca_pem }
 }

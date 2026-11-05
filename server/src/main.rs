@@ -1,8 +1,10 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use anyhow::{bail, Context, Result};
 use server::net::{self, ServeOptions};
 use server::sim::World;
+use server::store::Store;
 use server::{config, dev_tls};
 use tokio::net::TcpListener;
 use tokio_rustls::rustls::pki_types::pem::PemObject;
@@ -16,7 +18,10 @@ Usage: server [options]
   --cert FILE       TLS certificate chain, PEM
   --key FILE        TLS private key, PEM
   --dev             Local development: accept dev logins without proof of
-                    identity, and use a throwaway CA written to dev-certs/ca.pem";
+                    identity, and use a throwaway CA written to dev-certs/ca.pem
+  --no-db           Keep the world in memory only; it is lost on exit
+
+Saves to Postgres at DATABASE_URL, read from the environment or from .env.";
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -32,6 +37,7 @@ async fn main() -> Result<()> {
     let mut cert = None;
     let mut key = None;
     let mut dev = false;
+    let mut no_db = false;
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
         let mut value = || args.next().with_context(|| format!("{arg} needs a value"));
@@ -42,6 +48,7 @@ async fn main() -> Result<()> {
             "--cert" => cert = Some(PathBuf::from(value()?)),
             "--key" => key = Some(PathBuf::from(value()?)),
             "--dev" => dev = true,
+            "--no-db" => no_db = true,
             "--help" | "-h" => {
                 println!("{USAGE}");
                 return Ok(());
@@ -81,12 +88,51 @@ async fn main() -> Result<()> {
         tracing::warn!("development login is on: anyone who can connect can be any account");
     }
 
-    let world = World::new(game, content);
-    tokio::select! {
-        result = net::serve(listener, tls, world, ServeOptions { dev_login: dev }) => result,
-        _ = tokio::signal::ctrl_c() => {
-            tracing::info!("shutting down");
-            Ok(())
-        }
+    let (world, store) = if no_db {
+        tracing::warn!("no database: the world is lost when the server stops");
+        (World::new(game, content), None)
+    } else {
+        let url = database_url()
+            .context("DATABASE_URL is not set in the environment or .env (or pass --no-db)")?;
+        let store = Store::connect(&url).await?;
+        let world = match store.load().await? {
+            Some(saved) => {
+                let (tick, characters) = (saved.tick, saved.characters.len());
+                let world = World::restore(game, content, saved)
+                    .context("the saved world doesn't match the current config")?;
+                tracing::info!(tick, characters, "world loaded");
+                world
+            }
+            None => {
+                tracing::info!("empty database: starting a new world");
+                World::new(game, content)
+            }
+        };
+        (world, Some(Arc::new(store)))
+    };
+
+    let shutdown = async {
+        let _ = tokio::signal::ctrl_c().await;
+        tracing::info!("shutting down");
+    };
+    net::serve(
+        listener,
+        tls,
+        world,
+        ServeOptions { dev_login: dev },
+        store,
+        shutdown,
+    )
+    .await
+}
+
+/// From the environment first, then a DATABASE_URL line in ./.env.
+fn database_url() -> Option<String> {
+    if let Ok(url) = std::env::var("DATABASE_URL") {
+        return Some(url);
     }
+    let env = std::fs::read_to_string(".env").ok()?;
+    env.lines()
+        .find_map(|line| line.trim().strip_prefix("DATABASE_URL="))
+        .map(|url| url.trim_matches(['"', '\'']).to_string())
 }

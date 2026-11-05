@@ -4,8 +4,10 @@
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
+use anyhow::{ensure, Context};
 use protocol as pb;
 use protocol::{ContactKind, Refusal, ShipState, TutorialStep};
+use serde::{Deserialize, Serialize};
 
 use crate::config::{
     GameConfig, GridKind, LaserConfig, Pos, SystemConfig, WorldConfig, STATION_GRID,
@@ -16,7 +18,7 @@ const MAX_COMMAND_BYTES: usize = 256;
 const SECONDS_PER_HOUR: f64 = 3600.0;
 const FERRITE: &str = "ferrite";
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 enum Activity {
     Docked,
     Undocking {
@@ -46,7 +48,7 @@ enum Activity {
     Stowed,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Ship {
     id: String,
     type_id: String,
@@ -64,15 +66,19 @@ impl Ship {
 }
 
 /// Fields beyond these (faction and so on) arrive with the systems that use them.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Character {
     name: String,
     credits: u64,
     system: String,
     ship: Option<Ship>,
+    #[serde(with = "step_as_number")]
     step: TutorialStep,
+    /// Runtime only: everyone is offline after a restart.
+    #[serde(skip)]
     online: bool,
     logged_out_at: u64,
+    #[serde(skip)]
     events: Vec<String>,
     /// Skill levels by id. Nothing trains them yet.
     skills: skills::Levels,
@@ -93,7 +99,23 @@ impl Character {
     }
 }
 
-#[derive(Debug)]
+/// Saves the tutorial step as its protocol number, which never changes meaning.
+mod step_as_number {
+    use protocol::TutorialStep;
+    use serde::{de::Error, Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(step: &TutorialStep, out: S) -> Result<S::Ok, S::Error> {
+        out.serialize_i32(*step as i32)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(input: D) -> Result<TutorialStep, D::Error> {
+        let number = i32::deserialize(input)?;
+        TutorialStep::try_from(number)
+            .map_err(|_| D::Error::custom(format!("unknown tutorial step {number}")))
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 struct Rock {
     id: String,
     ore: String,
@@ -106,18 +128,31 @@ struct Rock {
     vein_expires: Option<u64>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 struct GridInstance {
     rocks: Vec<Rock>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct SystemInstance {
     template: String,
     is_tutorial: bool,
     grids: HashMap<String, GridInstance>,
     orders: BTreeMap<String, f64>,
     vein_spawned: bool,
+}
+
+/// A copy of the world for saving. Taken between ticks, written elsewhere.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Saved {
+    pub tick: u64,
+    pub next_id: u64,
+    pub systems: BTreeMap<String, serde_json::Value>,
+    pub characters: BTreeMap<String, serde_json::Value>,
+}
+
+fn to_json<T: Serialize>(value: &T) -> serde_json::Value {
+    serde_json::to_value(value).expect("world state is plain data")
 }
 
 /// What a command returns to the client.
@@ -178,6 +213,94 @@ impl World {
 
     pub fn tick_ms(&self) -> u32 {
         self.cfg.tick_ms
+    }
+
+    pub fn current_tick(&self) -> u64 {
+        self.tick
+    }
+
+    pub fn save_every_ticks(&self) -> u64 {
+        u64::from(self.cfg.save_every_s)
+    }
+
+    /// Everything a restart needs, one JSON document per system and character.
+    pub fn export(&self) -> Saved {
+        Saved {
+            tick: self.tick,
+            next_id: self.next_id,
+            systems: self
+                .systems
+                .iter()
+                .map(|(k, s)| (k.clone(), to_json(s)))
+                .collect(),
+            characters: self
+                .characters
+                .iter()
+                .map(|(k, c)| (k.clone(), to_json(c)))
+                .collect(),
+        }
+    }
+
+    /// Rebuilds a saved world. Everyone starts offline, so ships left in space
+    /// get the usual logout grace before warping to safety. Fails loudly if the
+    /// save refers to content or config that no longer exists.
+    pub fn restore(cfg: GameConfig, content: WorldConfig, saved: Saved) -> anyhow::Result<Self> {
+        let mut world = Self {
+            cfg: Arc::new(cfg),
+            content: Arc::new(content),
+            tick: saved.tick,
+            next_id: saved.next_id,
+            systems: HashMap::new(),
+            characters: HashMap::new(),
+        };
+        for (key, value) in saved.systems {
+            let system: SystemInstance =
+                serde_json::from_value(value).with_context(|| format!("loading system {key}"))?;
+            let source = world.content.system(&system.template).with_context(|| {
+                format!("system {key} uses unknown template {}", system.template)
+            })?;
+            for grid in system.grids.keys() {
+                ensure!(
+                    source.grid(grid).is_some(),
+                    "system {key} has unknown grid {grid}"
+                );
+            }
+            world.systems.insert(key, system);
+        }
+        let home = world.content.home_system.clone();
+        if !world.systems.contains_key(&home) {
+            world.create_system(&home, &home, false);
+        }
+        for (account, value) in saved.characters {
+            let mut ch: Character = serde_json::from_value(value)
+                .with_context(|| format!("loading character {account}"))?;
+            let system = world
+                .systems
+                .get(&ch.system)
+                .with_context(|| format!("{account} is in missing system {}", ch.system))?;
+            if let Some(ship) = &ch.ship {
+                ensure!(
+                    world.cfg.ships.contains_key(&ship.type_id),
+                    "{account} flies unknown ship {}",
+                    ship.type_id
+                );
+                ensure!(
+                    world.cfg.lasers.contains_key(&ship.laser),
+                    "{account} fits unknown laser {}",
+                    ship.laser
+                );
+                if let Some(grid) = &ship.grid {
+                    ensure!(
+                        system.grids.contains_key(grid),
+                        "{account} is on unknown grid {grid}"
+                    );
+                }
+            }
+            ch.online = false;
+            ch.logged_out_at = world.tick;
+            world.characters.insert(account, ch);
+        }
+        Ok(world)
     }
 
     fn create_system(&mut self, key: &str, template: &str, is_tutorial: bool) {
@@ -1772,5 +1895,100 @@ mod tests {
         let long = "x".repeat(MAX_COMMAND_BYTES + 1);
         refused(&mut w, "a", &long, Refusal::BadArgument);
         refused(&mut w, "a", "   ", Refusal::UnknownCommand);
+    }
+
+    fn config_pair() -> (GameConfig, WorldConfig) {
+        config::parse(
+            include_str!("../../config/game.toml"),
+            include_str!("../../config/world.toml"),
+        )
+        .unwrap()
+    }
+
+    /// A busy world: one player mid-mining in the pocket, one graduated to Kesh.
+    fn busy_world() -> World {
+        let mut w = world();
+        graduate(&mut w, "b");
+        w.login("a");
+        to_belt(&mut w, "a");
+        approach_and_mine(&mut w, "a");
+        for _ in 0..40 {
+            w.tick();
+        }
+        w.characters
+            .get_mut("b")
+            .unwrap()
+            .skills
+            .insert("mining".into(), 2);
+        w
+    }
+
+    #[test]
+    fn a_restored_world_matches_the_saved_one() {
+        let mut w = busy_world();
+        // Restoring marks everyone logged out now, so do the same to compare.
+        w.logout("a");
+        w.logout("b");
+        let saved = w.export();
+        let (game, content) = config_pair();
+        let restored = World::restore(game, content, saved.clone()).unwrap();
+        assert_eq!(restored.export(), saved);
+    }
+
+    #[test]
+    fn a_restored_world_keeps_playing() {
+        let w = busy_world();
+        let before_ids = w.next_id;
+        let (game, content) = config_pair();
+        let mut w = World::restore(game, content, w.export()).unwrap();
+
+        w.login("a");
+        let s = snap(&mut w, "a");
+        assert_eq!(s.system, "Training Pocket");
+        assert_eq!(s.ship.as_ref().unwrap().state(), ShipState::Mining);
+        assert_eq!(
+            s.ship.as_ref().unwrap().hold_used_m3,
+            25,
+            "one cycle was paid before the save"
+        );
+        assert_eq!(s.tutorial_step(), TutorialStep::Mine);
+        run_until(&mut w, "a", ShipState::Idle, 700);
+        assert!(w.next_id >= before_ids, "ids never repeat after a restart");
+        ok(&mut w, "a", "warp station");
+
+        w.login("b");
+        assert_eq!(snap(&mut w, "b").system, "Kesh");
+        assert_eq!(w.characters["b"].skills["mining"], 2);
+    }
+
+    #[test]
+    fn ships_in_space_get_the_logout_grace_after_a_restart() {
+        let w = busy_world();
+        let (game, content) = config_pair();
+        let mut w = World::restore(game, content, w.export()).unwrap();
+        for _ in 0..60 {
+            w.tick();
+        }
+        assert!(w.characters.values().all(|c| {
+            c.ship
+                .as_ref()
+                .is_some_and(|s| s.activity == Activity::Stowed)
+        }));
+    }
+
+    #[test]
+    fn restoring_fails_loudly_when_content_is_gone() {
+        let w = busy_world();
+        let saved = w.export();
+        let (game, mut content) = config_pair();
+        content.systems.retain(|s| s.id != "tutorial");
+        content.tutorial_system = "kesh".into();
+        let error = World::restore(game, content, saved).err().unwrap();
+        assert!(error.to_string().contains("unknown template"), "{error:#}");
+
+        let (mut game, content) = config_pair();
+        game.ships.clear();
+        let error = World::restore(game, content, w.export()).err().unwrap();
+        assert!(error.to_string().contains("unknown ship"), "{error:#}");
     }
 }

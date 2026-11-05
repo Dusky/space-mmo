@@ -5,6 +5,8 @@ tick_ms = 1000
 starting_credits = 10000
 # A ship left in space by a logged-out player leaves its grid after this long.
 logout_grace_s = 60
+# The world lives in memory and is saved this often. A crash loses at most this much.
+save_every_s = 5
 
 [timers]
 undock_s = 10
