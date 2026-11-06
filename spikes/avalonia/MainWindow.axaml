@@ -1,0 +1,95 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:SpaceMmo.Spike"
+        x:Class="SpaceMmo.Spike.MainWindow"
+        Title="Space MMO · Avalonia client test"
+        Width="1440" Height="900" MinWidth="1024" MinHeight="640">
+
+  <DockPanel>
+    <!-- Status bar -->
+    <Border DockPanel.Dock="Top" Classes="bar" BorderThickness="0,0,0,1" Padding="20,10">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+        <TextBlock Classes="heading" Text="SPACE MMO" VerticalAlignment="Center" />
+        <TextBlock x:Name="SystemText" Grid.Column="1" Margin="28,0" VerticalAlignment="Center" />
+        <TextBlock x:Name="StateText" Grid.Column="2" Margin="20,0" VerticalAlignment="Center" Classes="dim" />
+        <TextBlock x:Name="CreditsText" Grid.Column="3" Margin="20,0" VerticalAlignment="Center" />
+        <TextBlock x:Name="FpsText" Grid.Column="4" VerticalAlignment="Center" Classes="faint" />
+      </Grid>
+    </Border>
+
+    <!-- Event log and command line -->
+    <Border DockPanel.Dock="Bottom" Classes="bar" BorderThickness="0,1,0,0">
+      <Grid ColumnDefinitions="*,420">
+        <ItemsControl x:Name="EventLog" Margin="20,12" />
+        <Border Grid.Column="1" Classes="side" Padding="16,12">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="faint" Text="COMMAND" />
+            <Border Classes="input">
+              <DockPanel>
+                <TextBlock Text="&gt;" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBox x:Name="CommandBox" Classes="bare" VerticalAlignment="Center" FontSize="13" />
+              </DockPanel>
+            </Border>
+            <TextBlock x:Name="CompletionText" Classes="faint" TextWrapping="Wrap"
+                       Text="Tab completes · ↑ history · same commands as the automation API" />
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Border>
+
+    <Grid ColumnDefinitions="*,400">
+      <Panel>
+        <!-- Station view, shown while docked -->
+        <ScrollViewer x:Name="StationView">
+          <StackPanel Margin="40,32" MaxWidth="720" HorizontalAlignment="Left" Spacing="18">
+            <StackPanel Spacing="4">
+              <TextBlock Classes="heading" FontSize="22" Text="KESH STATION" />
+              <TextBlock Classes="dim" Text="Kesh · security 1.0 · hangar: Sparrow (docked), 0 m³ in hold" />
+            </StackPanel>
+            <TextBlock Classes="faint" Text="STATION SERVICES" />
+            <StackPanel x:Name="Services" Spacing="8" />
+            <Border Classes="bar" BorderThickness="1" Padding="16" MinHeight="120">
+              <TextBlock x:Name="ServiceDetail" TextWrapping="Wrap" Classes="dim"
+                         Text="Pick a service with F1 to F4, or type a command." />
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+        <!-- Radar, shown in space -->
+        <local:RadarControl x:Name="Radar" IsVisible="False" />
+      </Panel>
+
+      <!-- Overview -->
+      <Border Grid.Column="1" Classes="side">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Classes="heading" Text="OVERVIEW" Margin="16,14,16,8" />
+          <StackPanel DockPanel.Dock="Top" Margin="16,0,16,6" Spacing="6">
+            <TextBlock Classes="faint" Text="FILTER (Ctrl+F)" />
+            <TextBox x:Name="FilterBox" FontSize="12" />
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ToggleButton x:Name="ShipsToggle" Classes="filter" Content="Ships" IsChecked="True" />
+              <ToggleButton x:Name="RocksToggle" Classes="filter" Content="Asteroids" IsChecked="True" />
+              <ToggleButton x:Name="OtherToggle" Classes="filter" Content="Structures" IsChecked="True" />
+            </StackPanel>
+          </StackPanel>
+          <Grid DockPanel.Dock="Top" ColumnDefinitions="*,96,84" Margin="12,6,24,0">
+            <Button x:Name="SortName" Classes="header" Content="CONTACT" />
+            <Button x:Name="SortType" Grid.Column="1" Classes="header" Content="TYPE" />
+            <Button x:Name="SortDistance" Grid.Column="2" Classes="header" Content="DIST ▲" HorizontalAlignment="Right" />
+          </Grid>
+          <TextBlock x:Name="OverviewCount" DockPanel.Dock="Bottom" Classes="faint" Margin="16,6" />
+          <ListBox x:Name="Overview" Background="Transparent" Margin="4,0">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="local:OverviewRow">
+                <Grid ColumnDefinitions="*,96,84">
+                  <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" FontSize="12" />
+                  <TextBlock Grid.Column="1" Text="{Binding Type}" Classes="dim" FontSize="12" />
+                  <TextBlock Grid.Column="2" Text="{Binding Distance}" HorizontalAlignment="Right" FontSize="12" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>

@@ -197,7 +197,6 @@ Build the same thing in both, one weekend each, using fake data and no server.
 **Check**
 
 - [ ] Steam overlay opens (Shift+Tab) on Windows, macOS and Linux
-- [ ] Steam Deck: every screen works with the controller alone
 - [ ] Glow on radar lines without hurting frame rate
 - [ ] Sound: UI click, mining cycle, alert
 - [ ] High-DPI and ultrawide scaling
@@ -206,4 +205,4 @@ Build the same thing in both, one weekend each, using fake data and no server.
 - [ ] CI builds run on all three systems, and the macOS build notarizes
 - [ ] Low CPU and GPU use while docked, since players leave menu games open for hours
 
-**Decide:** the overlay and Steam Deck checks are pass or fail. If both engines pass, pick the one where building screens felt faster.
+**Decide:** the overlay check is pass or fail. If both engines pass, pick the one where building screens felt faster. Controller and Steam Deck support are not goals, so they don't count.

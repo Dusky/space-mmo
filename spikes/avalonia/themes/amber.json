@@ -1,0 +1,16 @@
+{
+  "name": "Amber Phosphor",
+  "colors": {
+    "background": "#0B0700",
+    "panel": "#120B02",
+    "line": "#3A2608",
+    "input": "#1E1404",
+    "text": "#FFC766",
+    "textDim": "#C9922F",
+    "textFaint": "#8C6420",
+    "accent": "#FFB000",
+    "warning": "#FF6A3D",
+    "friendly": "#FFE2A8",
+    "selection": "#3A2608"
+  }
+}

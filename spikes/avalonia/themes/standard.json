@@ -1,0 +1,16 @@
+{
+  "name": "Standard",
+  "colors": {
+    "background": "#060A0E",
+    "panel": "#0A1017",
+    "line": "#1C2A36",
+    "input": "#11202B",
+    "text": "#CFE3EA",
+    "textDim": "#8FA7B4",
+    "textFaint": "#6F8794",
+    "accent": "#4FD1E0",
+    "warning": "#F2A33A",
+    "friendly": "#6EA8FF",
+    "selection": "#16303D"
+  }
+}

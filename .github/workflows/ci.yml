@@ -64,3 +64,25 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
       - run: cargo test -p server --test store --locked
+
+  # The Avalonia client test, built for each desktop so it can be downloaded
+  # and tried. Cross-publishing from Linux keeps this off the costlier runners.
+  client-test-avalonia:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rid: [win-x64, osx-arm64, linux-x64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Check that the generated protobuf client compiles
+        run: dotnet build spikes/ProtoCheck -c Release
+      - name: Publish
+        run: dotnet publish spikes/avalonia -c Release -r ${{ matrix.rid }} --self-contained -o out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: client-test-avalonia-${{ matrix.rid }}
+          path: out
+          retention-days: 14

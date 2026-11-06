@@ -1,6 +1,6 @@
 # Space MMO (working title)
 
-A text/menu-based space MMO inspired by EVE Online and Elite Dangerous, aimed at a Steam release on Windows, macOS and Linux (including Steam Deck). No Electron or web runtime: the client is native.
+A text/menu-based space MMO inspired by EVE Online and Elite Dangerous, aimed at a Steam release on Windows, macOS and Linux, played with keyboard and mouse. Steam Deck and controller support are not goals. No Electron or web runtime: the client is native.
 
 The full design for the current milestone is in `docs/design.md`. Read it before starting any feature. The radar screen reference mockup is `docs/mockups/radar-standard.html` (open it in a browser).
 
