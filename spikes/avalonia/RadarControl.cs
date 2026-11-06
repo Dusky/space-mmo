@@ -3,23 +3,24 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using SpaceMmo.V1;
 
 namespace SpaceMmo.Spike;
 
 public enum GlowMode { Off, Fake, Blur }
 
 /// <summary>
-/// The radar from the mockup, drawn by hand: range rings, a rotating sweep and
-/// contacts. Everything is vector, so it stays sharp at any size and DPI.
+/// The radar from the mockup, drawn by hand from the latest snapshot: range
+/// rings, a rotating sweep and the contacts on this grid, centred on your ship.
 /// </summary>
 public sealed class RadarControl : Control
 {
     static readonly Stopwatch Clock = Stopwatch.StartNew();
     static readonly Typeface Mono = new("avares://SpaceMmoSpike/Assets/Fonts#IBM Plex Mono");
+    static readonly double[] Ranges = [5, 10, 25, 50, 100, 250];
 
-    public FakeWorld? World { get; set; }
+    public Snapshot? Snapshot { get; set; }
     public string? SelectedId { get; set; }
-    public double RangeKm { get; set; } = 100;
     public int FramesDrawn { get; private set; }
 
     GlowMode _glow;
@@ -29,7 +30,7 @@ public sealed class RadarControl : Control
         set
         {
             _glow = value;
-            // The real glow: a GPU blur of everything this control draws.
+            // The real glow: a blur of everything this control draws.
             Effect = value == GlowMode.Blur
                 ? new DropShadowEffect { BlurRadius = 10, OffsetX = 0, OffsetY = 0, Color = Color("accent"), Opacity = 0.9 }
                 : null;
@@ -45,8 +46,14 @@ public sealed class RadarControl : Control
 
     static Color Color(string token) => Themes.Colors.TryGetValue(token, out var c) ? c : Colors.Magenta;
 
-    static IBrush Brush(string token, double opacity = 1) =>
-        new SolidColorBrush(Color(token), opacity);
+    static IBrush Brush(string token, double opacity = 1) => new SolidColorBrush(Color(token), opacity);
+
+    /// <summary>The smallest standard range that fits every contact, so a grid fills the radar.</summary>
+    double RangeKm()
+    {
+        var farthest = Snapshot?.Contacts.Select(c => c.DistanceKm).DefaultIfEmpty(0).Max() ?? 0;
+        return Ranges.FirstOrDefault(r => r >= farthest * 1.1, Ranges[^1]);
+    }
 
     public override void Render(DrawingContext ctx)
     {
@@ -55,27 +62,24 @@ public sealed class RadarControl : Control
         ctx.FillRectangle(Brush("background"), new Rect(bounds.Size));
         var center = new Point(bounds.Width / 2, bounds.Height / 2);
         var radius = Math.Max(10, Math.Min(bounds.Width, bounds.Height) / 2 - 28);
-        var scale = radius / RangeKm;
+        var range = RangeKm();
+        var scale = radius / range;
 
-        // Fake glow: draw each line twice, wide and faint underneath.
         void Line(Point a, Point b, IBrush brush, double width)
         {
             if (_glow == GlowMode.Fake)
-                ctx.DrawLine(new Pen(brush, width * 5) { Brush = WithOpacity(brush, 0.12) }, a, b);
+                ctx.DrawLine(new Pen(WithOpacity(brush, 0.12), width * 5), a, b);
             ctx.DrawLine(new Pen(brush, width), a, b);
-        }
-        void Circle(Point c, double r, IBrush? fill, IBrush stroke, double width)
-        {
-            if (_glow == GlowMode.Fake)
-                ctx.DrawEllipse(null, new Pen(WithOpacity(stroke, 0.12), width * 5), c, r, r);
-            ctx.DrawEllipse(fill, new Pen(stroke, width), c, r, r);
         }
 
         for (var ring = 1; ring <= 4; ring++)
         {
             var r = radius * ring / 4;
-            Circle(center, r, null, Brush("accent", ring == 4 ? 0.45 : 0.22), 1);
-            Text(ctx, $"{RangeKm * ring / 4:0}", new Point(center.X + 6, center.Y - r - 16), Brush("textFaint"), 10);
+            var stroke = Brush("accent", ring == 4 ? 0.45 : 0.22);
+            if (_glow == GlowMode.Fake)
+                ctx.DrawEllipse(null, new Pen(WithOpacity(stroke, 0.12), 5), center, r, r);
+            ctx.DrawEllipse(null, new Pen(stroke, 1), center, r, r);
+            Text(ctx, $"{range * ring / 4:0.#} km", new Point(center.X + 6, center.Y - r - 16), Brush("textFaint"), 10);
         }
         Line(new Point(center.X - radius, center.Y), new Point(center.X + radius, center.Y), Brush("accent", 0.15), 1);
         Line(new Point(center.X, center.Y - radius), new Point(center.X, center.Y + radius), Brush("accent", 0.15), 1);
@@ -96,19 +100,25 @@ public sealed class RadarControl : Control
         ctx.DrawGeometry(Brush("accent", 0.07), null, wedge);
         Line(center, tip, Brush("accent", 0.7), 1.5);
 
-        if (World is not null && !World.Docked)
+        var ship = Snapshot?.Ship;
+        if (Snapshot is not null && ship is not null)
         {
-            foreach (var c in World.Contacts)
+            foreach (var c in Snapshot.Contacts)
             {
-                if (c.Distance > RangeKm) continue;
-                var p = new Point(center.X + c.X * scale, center.Y - c.Y * scale);
-                DrawContact(ctx, c, p);
+                // Positions are grid kilometres; draw them relative to your ship.
+                var p = new Point(center.X + (c.XKm - ship.XKm) * scale, center.Y - (c.YKm - ship.YKm) * scale);
+                if (c.DistanceKm <= range) DrawContact(ctx, c, p);
+            }
+            // Laser range, faintly, so "out of range" is visible before you try.
+            if (ship.LaserRangeKm > 0 && ship.LaserRangeKm <= range)
+            {
+                var lr = ship.LaserRangeKm * scale;
+                ctx.DrawEllipse(null, new Pen(Brush("warning", 0.35), 1) { DashStyle = DashStyle.Dash }, center, lr, lr);
             }
         }
 
-        // Your ship, at the centre.
-        var ship = new StreamGeometry();
-        using (var g = ship.Open())
+        var you = new StreamGeometry();
+        using (var g = you.Open())
         {
             g.BeginFigure(new Point(center.X, center.Y - 11), true);
             g.LineTo(new Point(center.X + 7, center.Y + 7));
@@ -116,7 +126,7 @@ public sealed class RadarControl : Control
             g.LineTo(new Point(center.X - 7, center.Y + 7));
             g.EndFigure(true);
         }
-        ctx.DrawGeometry(Brush("text"), null, ship);
+        ctx.DrawGeometry(Brush("text"), null, you);
     }
 
     void DrawContact(DrawingContext ctx, Contact c, Point p)
@@ -141,12 +151,14 @@ public sealed class RadarControl : Control
                 ctx.DrawGeometry(null, new Pen(Brush("text"), 1.5), diamond);
                 break;
             case ContactKind.Asteroid:
-                ctx.DrawEllipse(Brush("textDim"), null, p, 2.5, 2.5);
+                var size = 2 + Math.Min(4, c.VolumeLeftM3 / 2000.0);
+                ctx.DrawEllipse(Brush(c.VolumeLeftM3 > 0 ? "textDim" : "textFaint"), null, p, size, size);
                 label = false;
                 break;
-            case ContactKind.Anomaly:
-                ctx.DrawEllipse(null, new Pen(Brush("warning"), 1.5), p, 8, 8);
-                ctx.DrawEllipse(Brush("warning"), null, p, 2.5, 2.5);
+            case ContactKind.RichVein:
+                ctx.DrawEllipse(null, new Pen(Brush("warning"), 1.5), p, 10, 10);
+                ctx.DrawEllipse(null, new Pen(Brush("warning", 0.45), 1), p, 18, 18);
+                ctx.DrawEllipse(Brush("warning"), null, p, 3, 3);
                 break;
             case ContactKind.PlayerShip or ContactKind.NpcShip:
                 var tri = new StreamGeometry();
@@ -157,21 +169,20 @@ public sealed class RadarControl : Control
                     g.LineTo(new Point(p.X - 7, p.Y + 6));
                     g.EndFigure(true);
                 }
-                var brush = Brush(c.Kind == ContactKind.PlayerShip ? "friendly" : "accent");
-                ctx.DrawGeometry(brush, null, tri);
+                ctx.DrawGeometry(Brush(c.Kind == ContactKind.PlayerShip ? "friendly" : "accent"), null, tri);
                 break;
         }
         if (selected)
             ctx.DrawEllipse(null, new Pen(Brush("warning"), 1.5) { DashStyle = DashStyle.Dash }, p, 15, 15);
         if (label || selected)
-            Text(ctx, c.Name, new Point(p.X + 12, p.Y - 8), Brush(selected ? "warning" : "textDim"), 11);
+        {
+            var name = c.Kind == ContactKind.Asteroid ? c.Id : c.Name;
+            Text(ctx, name, new Point(p.X + 12, p.Y - 8), Brush(selected ? "warning" : "textDim"), 11);
+        }
     }
 
-    static void Text(DrawingContext ctx, string text, Point at, IBrush brush, double size)
-    {
-        var formatted = new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Mono, size, brush);
-        ctx.DrawText(formatted, at);
-    }
+    static void Text(DrawingContext ctx, string text, Point at, IBrush brush, double size) =>
+        ctx.DrawText(new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Mono, size, brush), at);
 
     static IBrush WithOpacity(IBrush brush, double opacity) =>
         brush is ISolidColorBrush s ? new SolidColorBrush(s.Color, s.Opacity * opacity) : brush;

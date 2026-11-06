@@ -145,13 +145,13 @@ If a player logs out in space, their ship stays for 60 seconds and then warps to
 
 ## Screens and open questions
 
-The slice needs five screens; only the radar exists as a mockup so far.
+The slice needs five screens. The radar has an HTML mockup, and all five are built in the Avalonia client test from real server snapshots. Their final look waits on the engine choice.
 
-- [ ] Station view: services list, station name and security, hangar summary
-- [ ] Shipyard: ship stats, price, buy confirmation (the tutorial's first real choice)
+- [x] Station view: services list, station name and security, hangar summary
+- [x] Shipyard: ship stats, price, buy (no confirmation step yet; the tutorial's first real choice)
 - [x] Radar / space view (canvas option C, being refined)
-- [ ] Mining panel: target rock, cycle timer, hold fill, stop
-- [ ] Market: NPC buy orders, sell quantity, payout
+- [x] Mining panel: target rock, cycle timer, hold fill, stop
+- [x] Market: NPC buy orders, sell quantity, payout
 
 **Open questions**
 
@@ -184,25 +184,24 @@ The server and protocol are settled. The client comes down to Godot 4 or Avaloni
 
 ### Client test: Godot vs Avalonia
 
-Build the same thing in both, one weekend each, using fake data and no server.
+Build the same thing in both, one weekend each. The test began with fake data only; the Avalonia client now also plays the real server through the shared `client-core` library, and the Godot client should do the same.
 
-**Build**
+| Item | Avalonia | Godot |
+| --- | --- | --- |
+| Station view with the services list and hotkeys | Done | Not started |
+| Radar: vector rings, sweep, 20 contacts moving every second | Done | Not started |
+| Overview list with 200 rows, sorting and filters | Done | Not started |
+| Command line with history and tab completion | Done | Not started |
+| Theme swap at runtime between Standard and one other theme | Done | Not started |
+| Steam overlay opens (Shift+Tab) on Windows, macOS and Linux | Not tested | Not tested |
+| Glow on radar lines without hurting frame rate | Software render only: fake glow is free, blur 2.4× slower | Not tested |
+| Sound: UI click, mining cycle, alert | Not tested | Not tested |
+| High-DPI and ultrawide scaling | Not tested | Not tested |
+| Crisp monospace text at 11 to 14 px, and non-Latin input in the command line | Text crisp in screenshots; input not tested | Not tested |
+| Generated protobuf client compiles and connects | Done: plays the tutorial on the real server | Not started |
+| CI builds run on all three systems, and the macOS build notarizes | Builds run; not notarized | Not started |
+| Low CPU and GPU use while docked, since players leave menu games open for hours | Software render only: 7% of one core docked | Not tested |
 
-- [ ] Station view with the services list and hotkeys
-- [ ] Radar: vector rings, sweep, 20 contacts moving every second
-- [ ] Overview list with 200 rows, sorting and filters
-- [ ] Command line with history and tab completion
-- [ ] Theme swap at runtime between Standard and one other theme
-
-**Check**
-
-- [ ] Steam overlay opens (Shift+Tab) on Windows, macOS and Linux
-- [ ] Glow on radar lines without hurting frame rate
-- [ ] Sound: UI click, mining cycle, alert
-- [ ] High-DPI and ultrawide scaling
-- [ ] Crisp monospace text at 11 to 14 px, and non-Latin input in the command line
-- [ ] Generated protobuf client compiles and connects to a stub server
-- [ ] CI builds run on all three systems, and the macOS build notarizes
-- [ ] Low CPU and GPU use while docked, since players leave menu games open for hours
+Avalonia details and measurements are in `spikes/avalonia/README.md`.
 
 **Decide:** the overlay check is pass or fail. If both engines pass, pick the one where building screens felt faster. Controller and Steam Deck support are not goals, so they don't count.

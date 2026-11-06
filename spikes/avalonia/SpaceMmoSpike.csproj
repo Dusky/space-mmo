@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../client-core/SpaceMmo.ClientCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AvaloniaResource Include="Assets\Fonts\*.ttf" />
     <!-- Themes are data files, loaded and swapped at runtime. -->
     <None Include="themes\*.json" CopyToOutputDirectory="PreserveNewest" />

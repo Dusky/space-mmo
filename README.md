@@ -2,7 +2,7 @@
 
 A text and menu-based space MMO. See `docs/design.md` for the design and `CLAUDE.md` for the architecture rules.
 
-Needs Rust from [rustup](https://rustup.rs). There is no client yet, so the headless bot plays the game.
+Needs Rust from [rustup](https://rustup.rs). The headless bot plays the game, and so can the Avalonia test client in `spikes/avalonia`, which needs the .NET 10 SDK. For where the work stands and what's next, see `docs/handoff.md`.
 
 ```sh
 cargo test --workspace            # Includes the whole slice, sped up, over real TLS
@@ -25,4 +25,6 @@ On the dev machine, Postgres runs in Docker from `~/.docker/space-mmo-db`, liste
 | `server/` | Authoritative server. `sim.rs` is the game, `net.rs` the networking |
 | `bot/` | Headless client and slice tests |
 | `config/` | Tuning numbers and world content. `ASSUMED` marks values the design doc doesn't specify yet |
-| `docs/` | Design doc and mockups |
+| `client-core/` | C# connection and protocol library, shared by the client tests |
+| `spikes/` | Client tests (Avalonia now, Godot next) and ProtoCheck |
+| `docs/` | Design doc, handoff notes and mockups |

@@ -2,7 +2,12 @@
 
 A text/menu-based space MMO inspired by EVE Online and Elite Dangerous, aimed at a Steam release on Windows, macOS and Linux, played with keyboard and mouse. Steam Deck and controller support are not goals. No Electron or web runtime: the client is native.
 
-The full design for the current milestone is in `docs/design.md`. Read it before starting any feature. The radar screen reference mockup is `docs/mockups/radar-standard.html` (open it in a browser).
+The full design for the current milestone is in `docs/design.md`. Read it before starting any feature. The radar screen reference mockup is `docs/mockups/radar-standard.html` (open it in a browser). For where the work stands and what's next, read `docs/handoff.md`.
+
+## Working agreements
+
+- Ask before commits, pushes, creating containers, and anything that costs money.
+- Never print secrets, such as `.env` contents.
 
 ## Current milestone: the vertical slice
 
@@ -22,7 +27,7 @@ One complete loop: tutorial pocket (instanced, one per player) → station view 
 
 - Server: Rust with tokio, one process. Postgres via sqlx; the world lives in memory and is saved every few ticks.
 - Protocol: Protobuf over TLS. The `.proto` schema is the single source of truth; generate server and client code from it.
-- Client: Godot 4 (C#) or Avalonia 12 (C#), not decided yet. See "Client test" in the design doc. Until it's decided, don't write client code beyond the test spikes.
+- Client: Godot 4 (C#) or Avalonia 12 (C#), not decided yet. See "Client test" in the design doc. Until it's decided, don't write client code beyond the test spikes and the engine-agnostic `client-core/` library they share.
 - Steam: Steamworks.NET. Login uses Steam session tickets validated by the server; no passwords stored.
 - Tests and load: a headless Rust bot client that speaks the protocol.
 - CI: GitHub Actions building all three platforms.
@@ -31,13 +36,16 @@ One complete loop: tutorial pocket (instanced, one per player) → station view 
 
 Game content is our own, not EVE's. The common ore is **Ferrite**; the rich ore is **Siltane**. Don't use EVE names (Veldspar, Jita, etc.) anywhere.
 
-## Suggested repo layout
+## Repo layout
 
 ```
 proto/        # .proto schema (source of truth)
+protocol/     # Rust code generated from the schema
 server/       # Rust server
 bot/          # Rust headless client (tests, load, API reference)
-client/       # Godot or Avalonia client (after the client test)
-spikes/       # Godot and Avalonia test builds
-docs/         # design.md, mockups
+config/       # Tuning numbers and world content
+client-core/  # C# connection and protocol library, shared by both client tests
+spikes/       # Avalonia and (next) Godot test clients, plus ProtoCheck
+client/       # The chosen client, after the client test
+docs/         # design.md, handoff.md, mockups
 ```

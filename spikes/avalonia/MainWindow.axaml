@@ -8,19 +8,27 @@
   <DockPanel>
     <!-- Status bar -->
     <Border DockPanel.Dock="Top" Classes="bar" BorderThickness="0,0,0,1" Padding="20,10">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto">
         <TextBlock Classes="heading" Text="SPACE MMO" VerticalAlignment="Center" />
-        <TextBlock x:Name="SystemText" Grid.Column="1" Margin="28,0" VerticalAlignment="Center" />
-        <TextBlock x:Name="StateText" Grid.Column="2" Margin="20,0" VerticalAlignment="Center" Classes="dim" />
-        <TextBlock x:Name="CreditsText" Grid.Column="3" Margin="20,0" VerticalAlignment="Center" />
-        <TextBlock x:Name="FpsText" Grid.Column="4" VerticalAlignment="Center" Classes="faint" />
+        <TextBlock x:Name="SystemText" Grid.Column="1" Margin="28,0,0,0" VerticalAlignment="Center" />
+        <TextBlock x:Name="ConnectionText" Grid.Column="2" Margin="20,0" VerticalAlignment="Center" Classes="faint" />
+        <TextBlock x:Name="StateText" Grid.Column="3" Margin="20,0" VerticalAlignment="Center" Classes="dim" />
+        <TextBlock x:Name="HoldText" Grid.Column="4" Margin="20,0" VerticalAlignment="Center" Classes="dim" />
+        <TextBlock x:Name="CreditsText" Grid.Column="5" Margin="20,0" VerticalAlignment="Center" />
+        <TextBlock x:Name="FpsText" Grid.Column="6" VerticalAlignment="Center" Classes="faint" />
       </Grid>
     </Border>
 
     <!-- Event log and command line -->
-    <Border DockPanel.Dock="Bottom" Classes="bar" BorderThickness="0,1,0,0">
+    <Border DockPanel.Dock="Bottom" Classes="bar" BorderThickness="0,1,0,0" Height="128">
       <Grid ColumnDefinitions="*,420">
-        <ItemsControl x:Name="EventLog" Margin="20,12" />
+        <ItemsControl x:Name="EventLog" Margin="20,10">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:LogLine">
+              <TextBlock Text="{Binding Text}" Classes.warning="{Binding Warning}" TextTrimming="CharacterEllipsis" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
         <Border Grid.Column="1" Classes="side" Padding="16,12">
           <StackPanel Spacing="8">
             <TextBlock Classes="faint" Text="COMMAND" />
@@ -38,57 +46,91 @@
     </Border>
 
     <Grid ColumnDefinitions="*,400">
-      <Panel>
-        <!-- Station view, shown while docked -->
-        <ScrollViewer x:Name="StationView">
-          <StackPanel Margin="40,32" MaxWidth="720" HorizontalAlignment="Left" Spacing="18">
-            <StackPanel Spacing="4">
-              <TextBlock Classes="heading" FontSize="22" Text="KESH STATION" />
-              <TextBlock Classes="dim" Text="Kesh · security 1.0 · hangar: Sparrow (docked), 0 m³ in hold" />
-            </StackPanel>
-            <TextBlock Classes="faint" Text="STATION SERVICES" />
-            <StackPanel x:Name="Services" Spacing="8" />
-            <Border Classes="bar" BorderThickness="1" Padding="16" MinHeight="120">
-              <TextBlock x:Name="ServiceDetail" TextWrapping="Wrap" Classes="dim"
-                         Text="Pick a service with F1 to F4, or type a command." />
-            </Border>
+      <DockPanel>
+        <!-- Tutorial step, as reported by the server -->
+        <Border x:Name="TutorialBanner" DockPanel.Dock="Top" IsVisible="False" Padding="20,10"
+                Background="{DynamicResource SelectionBrush}" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="0,0,0,1">
+          <StackPanel Orientation="Horizontal" Spacing="14">
+            <TextBlock Text="TRAINING" Classes="warning" FontWeight="SemiBold" />
+            <TextBlock x:Name="TutorialText" TextWrapping="Wrap" />
           </StackPanel>
-        </ScrollViewer>
-        <!-- Radar, shown in space -->
-        <local:RadarControl x:Name="Radar" IsVisible="False" />
-      </Panel>
+        </Border>
+        <Panel>
+          <!-- Station view, shown while docked -->
+          <ScrollViewer x:Name="StationView">
+            <StackPanel Margin="40,28" MaxWidth="760" HorizontalAlignment="Left" Spacing="16">
+              <StackPanel Spacing="4">
+                <TextBlock x:Name="StationTitle" Classes="heading" FontSize="22" />
+                <TextBlock x:Name="StationSubtitle" Classes="dim" />
+              </StackPanel>
+              <TextBlock Classes="faint" Text="STATION SERVICES" />
+              <StackPanel x:Name="Services" Orientation="Horizontal" Spacing="8" />
+              <Border Classes="bar" BorderThickness="1" Padding="18" MinHeight="140">
+                <StackPanel x:Name="ServicePanel" Spacing="10" />
+              </Border>
+            </StackPanel>
+          </ScrollViewer>
+          <!-- Radar, shown in space -->
+          <local:RadarControl x:Name="Radar" IsVisible="False" />
+        </Panel>
+      </DockPanel>
 
-      <!-- Overview -->
       <Border Grid.Column="1" Classes="side">
-        <DockPanel>
-          <TextBlock DockPanel.Dock="Top" Classes="heading" Text="OVERVIEW" Margin="16,14,16,8" />
-          <StackPanel DockPanel.Dock="Top" Margin="16,0,16,6" Spacing="6">
-            <TextBlock Classes="faint" Text="FILTER (Ctrl+F)" />
-            <TextBox x:Name="FilterBox" FontSize="12" />
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ToggleButton x:Name="ShipsToggle" Classes="filter" Content="Ships" IsChecked="True" />
-              <ToggleButton x:Name="RocksToggle" Classes="filter" Content="Asteroids" IsChecked="True" />
-              <ToggleButton x:Name="OtherToggle" Classes="filter" Content="Structures" IsChecked="True" />
+        <Grid RowDefinitions="*,Auto,Auto">
+          <!-- Overview -->
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Classes="heading" Text="OVERVIEW" Margin="16,14,16,8" />
+            <StackPanel DockPanel.Dock="Top" Margin="16,0,16,6" Spacing="6">
+              <TextBox x:Name="FilterBox" FontSize="12" />
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ToggleButton x:Name="ShipsToggle" Classes="filter" Content="Ships" IsChecked="True" />
+                <ToggleButton x:Name="RocksToggle" Classes="filter" Content="Asteroids" IsChecked="True" />
+                <ToggleButton x:Name="OtherToggle" Classes="filter" Content="Structures" IsChecked="True" />
+              </StackPanel>
             </StackPanel>
-          </StackPanel>
-          <Grid DockPanel.Dock="Top" ColumnDefinitions="*,96,84" Margin="12,6,24,0">
-            <Button x:Name="SortName" Classes="header" Content="CONTACT" />
-            <Button x:Name="SortType" Grid.Column="1" Classes="header" Content="TYPE" />
-            <Button x:Name="SortDistance" Grid.Column="2" Classes="header" Content="DIST ▲" HorizontalAlignment="Right" />
-          </Grid>
-          <TextBlock x:Name="OverviewCount" DockPanel.Dock="Bottom" Classes="faint" Margin="16,6" />
-          <ListBox x:Name="Overview" Background="Transparent" Margin="4,0">
-            <ListBox.ItemTemplate>
-              <DataTemplate x:DataType="local:OverviewRow">
-                <Grid ColumnDefinitions="*,96,84">
-                  <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" FontSize="12" />
-                  <TextBlock Grid.Column="1" Text="{Binding Type}" Classes="dim" FontSize="12" />
-                  <TextBlock Grid.Column="2" Text="{Binding Distance}" HorizontalAlignment="Right" FontSize="12" />
-                </Grid>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-        </DockPanel>
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="*,96,84" Margin="12,6,24,0">
+              <Button x:Name="SortName" Classes="header" Content="CONTACT" />
+              <Button x:Name="SortType" Grid.Column="1" Classes="header" Content="TYPE" />
+              <Button x:Name="SortDistance" Grid.Column="2" Classes="header" Content="DIST ▲" HorizontalAlignment="Right" />
+            </Grid>
+            <TextBlock x:Name="OverviewCount" DockPanel.Dock="Bottom" Classes="faint" Margin="16,6" />
+            <ListBox x:Name="Overview" Background="Transparent" Margin="4,0">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="local:OverviewRow">
+                  <Grid ColumnDefinitions="*,96,84">
+                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" FontSize="12" />
+                    <TextBlock Grid.Column="1" Text="{Binding Type}" Classes="dim" FontSize="12" />
+                    <TextBlock Grid.Column="2" Text="{Binding Distance}" HorizontalAlignment="Right" FontSize="12" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+
+          <!-- Target -->
+          <Border Grid.Row="1" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="16,12">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="heading" Text="TARGET" />
+              <TextBlock x:Name="TargetText" Classes="dim" TextWrapping="Wrap" Text="Select a contact in the overview." />
+              <WrapPanel x:Name="TargetActions" />
+            </StackPanel>
+          </Border>
+
+          <!-- Ship -->
+          <Border Grid.Row="2" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="16,12">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="heading" Text="SHIP" />
+              <TextBlock x:Name="ShipText" Classes="dim" TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="64,*,96">
+                <TextBlock Text="Cargo" Classes="dim" FontSize="12" VerticalAlignment="Center" />
+                <ProgressBar x:Name="HoldBar" Grid.Column="1" Minimum="0" Maximum="1" Height="6" MinHeight="6"
+                             Foreground="{DynamicResource AccentBrush}" Background="{DynamicResource LineBrush}" />
+                <TextBlock x:Name="HoldBarText" Grid.Column="2" FontSize="12" HorizontalAlignment="Right" />
+              </Grid>
+              <WrapPanel x:Name="ShipActions" />
+            </StackPanel>
+          </Border>
+        </Grid>
       </Border>
     </Grid>
   </DockPanel>

@@ -9,13 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.36.2" />
-    <PackageReference Include="Grpc.Tools" Version="2.85.0" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- The same schema the Rust server uses: one source of truth. -->
-    <Protobuf Include="../../proto/space_mmo.proto" ProtoRoot="../../proto" GrpcServices="None" />
+    <ProjectReference Include="../../client-core/SpaceMmo.ClientCore.csproj" />
   </ItemGroup>
 
 </Project>

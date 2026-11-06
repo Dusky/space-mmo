@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Engine-agnostic client code: connection, protocol and session. Plain C#,
+       so the Avalonia and Godot clients can both use it. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SpaceMmo.ClientCore</RootNamespace>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.36.2" />
+    <PackageReference Include="Grpc.Tools" Version="2.85.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The same schema the Rust server uses: one source of truth. -->
+    <Protobuf Include="../proto/space_mmo.proto" ProtoRoot="../proto" GrpcServices="None" />
+  </ItemGroup>
+
+</Project>

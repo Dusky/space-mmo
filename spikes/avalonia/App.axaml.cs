@@ -16,7 +16,11 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            desktop.MainWindow = new MainWindow();
+        {
+            desktop.MainWindow = Options.Session is { } session
+                ? new MainWindow(session, Options.ConnectionLabel)
+                : new MainWindow();
+        }
         base.OnFrameworkInitializationCompleted();
     }
 }
